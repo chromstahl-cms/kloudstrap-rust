@@ -7,13 +7,13 @@ use zip::ZipArchive;
 pub struct PluginMeta {
     name: String,
     author: String,
-    version: String,
+    pub version: u32,
 }
 
 #[derive(Debug)]
 pub struct Plugin  {
-    meta: PluginMeta,
-    zip_path: Option<PathBuf>
+    pub meta: PluginMeta,
+    pub zip_path: PathBuf
 }
 
 impl PluginMeta {
@@ -25,14 +25,21 @@ impl PluginMeta {
         self.author = author.to_owned();
     }
 
-    pub fn set_version(&mut self, version: &str) {
-        self.version = version.to_owned();
+    pub fn set_version(&mut self, version: u32) {
+        self.version = version;
+    }
+}
+
+impl PartialEq for PluginMeta {
+    fn eq(&self, other: &PluginMeta) -> bool {
+        self.name == other.name &&
+            self.author == other.author
     }
 }
 
 impl Plugin {
-    fn with_meta(meta: PluginMeta) -> Plugin {
-        Plugin {meta: meta, zip_path: Option::None}
+    fn new(meta: PluginMeta, zip_path: PathBuf) -> Plugin {
+        Plugin {meta: meta, zip_path: zip_path}
     }
 }
 
@@ -59,8 +66,7 @@ pub fn scan<P: AsRef<Path>>(base_dir: P) -> Result<Vec<Plugin>> {
         };
 
         let meta: PluginMeta = serde_json::from_reader(manifest_file)?;
-        let mut plugin = Plugin::with_meta(meta);
-        plugin.zip_path = Some(path);
+        let mut plugin = Plugin::new(meta, path);
         found.push(plugin);
     }
     Ok(found)
