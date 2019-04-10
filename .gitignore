@@ -1,2 +1,4 @@
 /target
 **/*.rs.bkplugins/
+.cache/
+plugin_lockfile.json

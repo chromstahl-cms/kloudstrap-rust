@@ -63,20 +63,33 @@ pub fn scan<P: AsRef<Path>>(base_dir: P) -> Result<Vec<Plugin>> {
         let mut archive = Archive::new(tar);
         let entries = archive.entries()?;
 
+        let cache_dir = Path::new("./.cache/").join(path_str.replace(".tar.gz", ""));
+        if !cache_dir.exists() {
+            std::fs::create_dir_all(&cache_dir)?;
+        }
+
+        let meta_path = cache_dir.join("meta.json");
         for entry in entries {
-            let path = match &entry {
-                Ok(e) => e.path(),
-                Err(e) => {panic!("FIX")}
+            let mut entry = match entry {
+                Ok(e) => e,
+                Err(e) => return Err(e)
             };
-            if path?.to_str().expect("path is not unicode") == "meta.json" {
-               entry?.unpack("meta.json");
+
+            let path = match entry.path() {
+                Ok(p) => p.into_owned(),
+                Err(e) => return Err(e)
+            };
+
+            if path.to_str().expect("path is not unicode") == "meta.json" {
+                entry.unpack(&meta_path)?;
+                break;
             }
         }
-/*
+
+        let manifest_file = File::open(&meta_path)?;
         let meta: PluginMeta = serde_json::from_reader(manifest_file)?;
-        let mut plugin = Plugin::new(meta, path);
+        let plugin = Plugin::new(meta, path);
         found.push(plugin);
-        */
     }
     Ok(found)
 }
