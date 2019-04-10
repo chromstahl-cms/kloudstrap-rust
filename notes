@@ -1,0 +1,10 @@
+Steps:
+
+1. Scan plugin folder for zip files
+2. filter out already knwn ones
+3. Unzip them
+4. feed information to gradle and npm
+5. build frontend
+6. build backend
+7. package docker container
+8. start docker container
