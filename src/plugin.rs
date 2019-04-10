@@ -10,6 +10,7 @@ pub struct PluginMeta {
     version: String,
 }
 
+#[derive(Debug)]
 pub struct Plugin  {
     meta: PluginMeta,
     zip_path: Option<PathBuf>
@@ -39,12 +40,13 @@ pub fn scan<P: AsRef<Path>>(base_dir: P) -> Result<Vec<Plugin>> {
     let iter = read_dir(base_dir)?;
     let mut found = Vec::new();
     for e in iter {
-        let path = match e {
+        let path: PathBuf = match e {
             Ok(e) => e.path(),
             Err(e) => return Err(e)
         };
 
-        if !path.ends_with(".zip") {
+        let path_str = path.to_str().expect("path not unicode");
+        if !path_str.ends_with(".zip") {
             continue;
         }
 

@@ -14,5 +14,9 @@ mod plugin;
 use plugin::{Plugin, scan};
 
 fn main() -> Result<()> {
+    let plugins = scan("./plugins")?;
+    for p in plugins {
+        print!("{:?}", p)
+    }
     Ok(())
 }
