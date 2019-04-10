@@ -6,8 +6,8 @@ use tar::Archive;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PluginMeta {
-    name: String,
-    author: String,
+    pub name: String,
+    pub author: String,
     pub version: u32,
 }
 
