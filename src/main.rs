@@ -1,5 +1,5 @@
 use std::io::{Write, Result};
-use std::fs::{File};
+use std::fs::{File, OpenOptions};
 use std::path::Path;
 use std::fs;
 
@@ -64,7 +64,7 @@ fn main() -> Result<()> {
     }
 
     locks.append(&mut new_locks);
+    let lock_file = OpenOptions::new().write(true).open(lock_file_path)?;
     serde_json::to_writer(lock_file, &locks)?;
-
     Ok(())
 }

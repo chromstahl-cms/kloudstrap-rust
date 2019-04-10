@@ -2,3 +2,4 @@
 **/*.rs.bkplugins/
 .cache/
 plugin_lockfile.json
+extracted_plugins/
