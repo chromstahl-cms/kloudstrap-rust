@@ -1,7 +1,8 @@
 use std::path::{Path, PathBuf};
-use std::io::{Result};
+use std::io::{Result, Error, ErrorKind};
 use std::fs::{read_dir, File};
-use zip::ZipArchive;
+use flate2::read::GzDecoder;
+use tar::Archive;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PluginMeta {
@@ -13,7 +14,7 @@ pub struct PluginMeta {
 #[derive(Debug)]
 pub struct Plugin  {
     pub meta: PluginMeta,
-    pub zip_path: PathBuf
+    pub archive_path: PathBuf
 }
 
 impl PluginMeta {
@@ -38,8 +39,8 @@ impl PartialEq for PluginMeta {
 }
 
 impl Plugin {
-    fn new(meta: PluginMeta, zip_path: PathBuf) -> Plugin {
-        Plugin {meta: meta, zip_path: zip_path}
+    fn new(meta: PluginMeta, archive_path: PathBuf) -> Plugin {
+        Plugin {meta: meta, archive_path: archive_path}
     }
 }
 
@@ -53,21 +54,29 @@ pub fn scan<P: AsRef<Path>>(base_dir: P) -> Result<Vec<Plugin>> {
         };
 
         let path_str = path.to_str().expect("path not unicode");
-        if !path_str.ends_with(".zip") {
+        if !path_str.ends_with(".tar.gz") {
             continue;
         }
 
-        let file = File::open(&path)?;
-        let mut zip_file = ZipArchive::new(file)?;
+        let tar_gz = File::open(&path)?;
+        let tar = GzDecoder::new(tar_gz);
+        let mut archive = Archive::new(tar);
+        let entries = archive.entries()?;
 
-        let manifest_file = match zip_file.by_name("meta.json") {
-            Ok(f) => f,
-            _ => continue
-        };
-
+        for entry in entries {
+            let path = match &entry {
+                Ok(e) => e.path(),
+                Err(e) => {panic!("FIX")}
+            };
+            if path?.to_str().expect("path is not unicode") == "meta.json" {
+               entry?.unpack("meta.json");
+            }
+        }
+/*
         let meta: PluginMeta = serde_json::from_reader(manifest_file)?;
         let mut plugin = Plugin::new(meta, path);
         found.push(plugin);
+        */
     }
     Ok(found)
 }
