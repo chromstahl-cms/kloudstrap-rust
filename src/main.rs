@@ -33,6 +33,7 @@ fn main() -> Result<()> {
 
     let mut locks: Vec<PluginMeta> = serde_json::from_reader(&lock_file)?;
     let mut new_locks: Vec<PluginMeta> = Vec::new();
+    let mut new_plugins = false;
 
     for p in plugins {
         if locks.contains(&p.meta) {
@@ -40,9 +41,11 @@ fn main() -> Result<()> {
                 let lock_version = &locks[index];
                 if lock_version.version >= p.meta.version {
                     continue;
-                }
+               }
             }
         }
+
+        new_plugins = true;
 
         let tar_gz = File::open(&p.archive_path)?;
         let tar = GzDecoder::new(tar_gz);
@@ -57,10 +60,15 @@ fn main() -> Result<()> {
             fs::create_dir_all(&unpack_path)?;
         }
 
-        archive.unpack(unpack_path)?;
+        archive.unpack(&unpack_path)?;
 
         print!("{:?}", &p);
         new_locks.push(p.meta);
+    }
+
+    let docker = shiplift::Docker::new();
+
+    if new_plugins {
     }
 
     locks.append(&mut new_locks);
